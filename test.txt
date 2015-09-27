@@ -1,0 +1,5 @@
+main() {
+	int aza, luis;
+	aza = 9;
+	luis = 10;;;;;
+}
