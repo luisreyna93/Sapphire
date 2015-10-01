@@ -9,7 +9,6 @@ if sys.version_info[0] >= 3:
     raw_input = input
 
 reserved = {
-    #"program":"PROGRAM",
     "int":"INT",
     "arrint":"ARRINT",
     "float":"FLOAT",
@@ -21,7 +20,6 @@ reserved = {
     "for":"FOR",
     "while":"WHILE",
     "print":"PRINT",
-    #"var":"VAR",
     "void":"VOID",
     "line":"LINE",
     "rect":"RECT",
