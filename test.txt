@@ -1,8 +1,15 @@
+function void funcion1(arrfloat[15] var5, int var6){
+	
+}
+
+function int funcion(int var1, float var2, arrint[10] var3, arrfloat[15] var4){
+	
+}
+
 main() {
 	int aza, luis;
 	aza = 9;
 	luis = 10;
 	arrint[5] hola;
 	arrfloat[5] hola2;
-	10 = luis;
 }

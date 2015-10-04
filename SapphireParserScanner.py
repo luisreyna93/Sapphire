@@ -1,73 +1,16 @@
 # -----------------------------------------------------------------------------
 # SapphireParserScanner.py
 # -----------------------------------------------------------------------------
-
 import sys
-sys.path.insert(0,"../..")
+import Lex
+from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict
+from copy import deepcopy
+tokens = Lex.tokens
 
-if sys.version_info[0] >= 3:
-    raw_input = input
-
-reserved = {
-    "int":"INT",
-    "arrint":"ARRINT",
-    "float":"FLOAT",
-    "arrfloat":"ARRFLOAT",
-    "else":"ELSE",
-    "print":"PRINT",
-    "if":"IF",
-    "else":"ELSE",
-    "for":"FOR",
-    "while":"WHILE",
-    "print":"PRINT",
-    "void":"VOID",
-    "line":"LINE",
-    "rect":"RECT",
-    "teapot":"TEAPOT",
-    "cube":"CUBE",
-    "color":"COLOR",
-    "triangle":"TRIANGLE",
-    "circle":"CIRCLE",
-    "arc":"ARC",
-    "width":"WIDTH",
-    "function":"FUNCTION",
-    "void":"VOID",
-    "main":"MAIN"
-}
-tokens = [
-    'CTEI', 'CTEF', 'CTES', 'DIFF', 'EQ', 'GTEQ', 'LTEQ', 'AND', 'OR', 'ID'
-    ] + list(reserved.values())
-
-literals = ";:,{}[]()<>&|+-*/="
-
-# Tokens
-t_ignore = ' \t'
-t_CTEI   = r'[0-9]+'
-t_CTEF   = r'[0-9]+\.[0-9]+'
-t_CTES   = r'".*"'
-t_DIFF   = r'<>'
-t_EQ   = r'=='
-t_GTEQ = r'>='
-t_LTEQ = r'<='
-t_AND = r'&&'
-t_OR = r'\|\|'
-
-def t_ID(t):
-    r'[a-zA-Z][a-zA-Z0-9]*'
-    t.type = reserved.get(t.value,'ID')
-    return t
-
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-    
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
-    
-# Build the lexer
-import ply.lex as lex
-lex.lex()
+scope = 1 #scope = 1 (global), scope = 2 (local)
+paramsTemp = {}
+tipoActual = []
+tipoActualReturn = []
 
 def p_program(p): 
     '''program : vars programp main''' 
@@ -126,18 +69,31 @@ def p_returntype(p):
     '''returntype : VOID
                   | INT
                   | FLOAT''' 
+    global tipoActualReturn 
+    tipoActualReturn.append(p[1])
 
 def p_type(p): 
     '''type : INT
             | FLOAT
             | ARRINT arrp
             | ARRFLOAT arrp'''
+    global tipoActual
+    tipoActual.append(p[1])
 
 def p_arrp(p): 
     '''arrp : '[' CTEI ']' '''  
 
 def p_main(p): 
     '''main : MAIN '(' ')' block ''' 
+    global paramsTemp
+    global tipoActualReturn
+    if func_is_repeated(p[3]):
+        print errors['REPEATED_DECLARATION_FUNC']
+        exit(1)
+    else:
+        add_to_func(p[1], 'None', paramsTemp)
+        paramsTemp = {}
+        print_func_dict()
 
 def p_block(p): 
     '''block : '{' body '}' ''' 
@@ -161,6 +117,16 @@ def p_statm(p):
 def p_functions(p): 
     '''functions : FUNCTION returntype ID '(' functionsp ')' block
             | empty''' 
+    global paramsTemp
+    global tipoActualReturn
+    if func_is_repeated(p[3]):
+        print errors['REPEATED_DECLARATION_FUNC']
+        exit(1)
+    else:
+        add_to_func(p[3], tipoActualReturn.pop(), paramsTemp)
+        paramsTemp = {}
+        print_func_dict()
+
 
 def p_functionsp(p): 
     '''functionsp : param
@@ -168,6 +134,8 @@ def p_functionsp(p):
 
 def p_param(p): 
     '''param : type ID paramp''' 
+    global tipoActual
+    paramsTemp.update({p[2] : tipoActual.pop()})
 
 def p_paramp(p): 
     '''paramp : ',' param 
