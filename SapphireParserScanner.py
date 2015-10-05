@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 import sys
 import Lex
-from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict
+from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict, add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
 from copy import deepcopy
 tokens = Lex.tokens
 
@@ -117,6 +117,7 @@ def p_statm(p):
 def p_functions(p): 
     '''functions : FUNCTION returntype ID '(' functionsp ')' block
             | empty''' 
+    print '*******FUNNC-********'
     global paramsTemp
     global tipoActualReturn
     if func_is_repeated(p[3]):
@@ -144,17 +145,35 @@ def p_paramp(p):
 def p_vars(p): 
     '''vars : varsp
             | empty''' 
+    global scope
+    scope=2;
 
 def p_varsp(p): 
     '''varsp : type varspp ';' varsp
-             | empty''' 
+             | empty'''
 
 def p_varspp(p): 
-    '''varspp : ID varsppaux''' 
+    '''varspp : ID varsppaux'''
+    print '*******VARS********'
+    global tipoActual
+    tipo= tipoActual.pop()
+    tipoActual.append(tipo)
+    if scope==1:
+        if global_var_exists(p[1]):
+            print errors['REPEATED_DECLARATION_FUNC']
+            exit(1)
+        else:
+            add_to_global_var_dict(p[1],tipo)
+    else:
+        if local_var_exists(p[1]):
+            print errors['REPEATED_DECLARATION_FUNC']
+            exit(1)
+        else:
+            add_to_local_var_dict(p[1], tipo)
 
 def p_varsppaux(p): 
     '''varsppaux : ',' varspp
-                  | empty''' 
+                  | empty'''
 
 def p_asign(p): 
     '''asign : vars
