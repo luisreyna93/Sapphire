@@ -1,3 +1,5 @@
+int aza;
+float var3;
 function void funcion1(arrfloat[15] var5, int var6){
 	
 }
