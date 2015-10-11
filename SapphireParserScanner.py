@@ -3,14 +3,20 @@
 # -----------------------------------------------------------------------------
 import sys
 import Lex
-from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict, add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_is_repeated,local_is_repeated
+from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict, add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
 from copy import deepcopy
+import pprint
+pp = pprint.PrettyPrinter()
+
 tokens = Lex.tokens
 
 scope = 1 #scope = 1 (global), scope = 2 (local)
 paramsTemp = {}
 tipoActual = []
 tipoActualReturn = []
+pilao= []
+popper= []
+quadruplo=[]
 
 def p_program(p): 
     '''program : vars programp main''' 
@@ -20,15 +26,28 @@ def p_programp(p):
                 | empty''' 
 
 def p_sexp(p): 
-    '''sexp : expression sexprima''' 
+    '''sexp : expression sexprima'''
+    if popper:
+        if popper[-1] == '&&'  or popper[-1] =='||':
+            global quadruplo
+            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo)))
 
 def p_sexprima(p): 
     '''sexprima : AND sexp
                 | OR sexp
                 | empty''' 
+    if p[1]:
+        popper.append(p[1])
+        pp.pprint(popper)
 
 def p_expression(p): 
-    '''expression : exp expressionp''' 
+    '''expression : exp expressionp'''
+    if popper:
+        if popper[-1] == '>'  or popper[-1] =='<' or popper[-1] =='<=' or popper[-1] =='>=' or popper[-1] =='==' or popper[-1] =='<>':
+                global quadruplo
+                quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
+                pilao.append('res'+str(len(quadruplo))) 
 
 def p_expressionp(p): 
     '''expressionp : '<' exp
@@ -37,33 +56,64 @@ def p_expressionp(p):
                     | GTEQ exp
                     | EQ exp
                     | DIFF exp 
-                    | empty''' 
+                    | empty'''
+    if p[1]:
+        popper.append(p[1])
 
 def p_exp(p): 
-    '''exp : term expp''' 
+    '''exp : term expp'''
+    if popper: 
+        if popper[-1] == '+' or popper[-1] =='-':
+            global quadruplo
+            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo))) 
 
 def p_expp(p): 
     '''expp : '+' exp
             | '-' exp
             | empty''' 
+    global popper
+    if p[1]:
+        popper.append(p[1])
 
 def p_term(p): 
-    '''term : factor termp''' 
+    '''term : factor termp'''
+    if popper: 
+        if popper[-1] == '*' or popper[-1] =='/':
+            global quadruplo
+            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo)))
 
 def p_termp(p): 
     '''termp : '/' term 
              | '*' term 
              | empty''' 
+    global popper
+    if p[1]:
+        popper.append(p[1])
 
 def p_factor(p): 
     '''factor : cons
-              | '(' sexp ')' ''' 
+              | bracketl sexp bracketr '''
+
+
+def p_bracketl(p):
+    '''bracketl : '(' '''
+    global popper
+    popper.append(p[1])
+
+def p_bracketr(p):
+    '''bracketr : ')' '''
+    global popper
+    popper.pop()
 
 def p_cons(p): 
     '''cons : id
             | CTEI
             | CTEF
-            | CTES''' 
+            | CTES'''
+    global pilao
+    pilao.append(p[1])
 
 def p_returntype(p): 
     '''returntype : VOID
@@ -93,7 +143,7 @@ def p_main(p):
     else:
         add_to_func(p[1], 'None', paramsTemp)
         paramsTemp = {}
-        print_func_dict()
+        #print_func_dict()
 
 def p_block(p): 
     '''block : '{' body '}' ''' 
@@ -125,7 +175,7 @@ def p_functions(p):
     else:
         add_to_func(p[3], tipoActualReturn.pop(), paramsTemp)
         paramsTemp = {}
-        print_func_dict()
+        #print_func_dict()
 
 
 def p_functionsp(p): 
@@ -157,14 +207,14 @@ def p_varspp(p):
     tipo= tipoActual.pop()
     tipoActual.append(tipo)
     if scope==1:
-        if global_is_repeated(p[1]):
-            print errors['REPEATED_DECLARATION_VAR']
+        if global_var_exists(p[1]):
+            print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
             add_to_global_var_dict(p[1],tipo)
     else:
-        if local_is_repeated(p[1]):
-            print errors['REPEATED_DECLARATION_VAR']
+        if local_var_exists(p[1]):
+            print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
             add_to_local_var_dict(p[1], tipo)
@@ -180,6 +230,7 @@ def p_asign(p):
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
               | '[' sexp ']' '=' sexp ';' ''' 
+    pp.pprint(quadruplo)
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' block condp''' 
@@ -280,7 +331,7 @@ if(len(sys.argv) > 1):
     string = ""
     for line in s:
         string += line + '\n'
-    print string
+    #print string
     result = yacc.parse(string)
 else:
     print "Error"
