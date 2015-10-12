@@ -39,8 +39,8 @@ semantic_cube {
 	('int', '==', 'float') : 'bool',
 	('int', '<>', 'float') : 'bool',
 
-	('bool', 'AND', 'bool') : 'bool',
-	('bool', 'OR', 'bool') : 'bool',
+	('bool', '&&', 'bool') : 'bool',
+	('bool', '||', 'bool') : 'bool',
 	('bool', '<', 'bool') : 'bool',
 	('bool', '>', 'bool') : 'bool',
 	('bool', '<=', 'bool') : 'bool',
