@@ -49,6 +49,16 @@ def func_is_repeated(fid):
         return True
     else:
         return False
+def global_var_exists(vid):
+    if vid in global_vars_dic:
+        return True
+    else:
+        return False
+def local_var_exists(vid):
+    if vid in global_vars_dic or vid in local_var_dict:
+        return True
+    else:
+        return False
 
 def global_is_repeated(vid):
     if vid in global_vars_dic:
