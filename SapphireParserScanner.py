@@ -19,7 +19,8 @@ popper= []
 quadruplo=[]
 
 def p_program(p): 
-    '''program : vars programp main''' 
+    '''program : vars programp main'''
+    pp.pprint(quadruplo)
 
 def p_programp(p): 
     '''programp : functions programp
@@ -30,8 +31,10 @@ def p_sexp(p):
     if popper:
         if popper[-1] == '&&'  or popper[-1] =='||':
             global quadruplo
-            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
-            pilao.append('res'+str(len(quadruplo)))
+            op1 =pilao.pop()
+            op2=pilao.pop()
+            quadruplo.append([popper.pop(),op2,op1,'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo)-1))
 
 def p_sexprima(p): 
     '''sexprima : AND sexp
@@ -39,15 +42,16 @@ def p_sexprima(p):
                 | empty''' 
     if p[1]:
         popper.append(p[1])
-        pp.pprint(popper)
 
 def p_expression(p): 
     '''expression : exp expressionp'''
     if popper:
         if popper[-1] == '>'  or popper[-1] =='<' or popper[-1] =='<=' or popper[-1] =='>=' or popper[-1] =='==' or popper[-1] =='<>':
                 global quadruplo
-                quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
-                pilao.append('res'+str(len(quadruplo))) 
+                op1 =pilao.pop()
+                op2=pilao.pop()
+                quadruplo.append([popper.pop(),op2,op1,'res'+str(len(quadruplo))])
+                pilao.append('res'+str(len(quadruplo)-1)) 
 
 def p_expressionp(p): 
     '''expressionp : '<' exp
@@ -65,8 +69,10 @@ def p_exp(p):
     if popper: 
         if popper[-1] == '+' or popper[-1] =='-':
             global quadruplo
-            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
-            pilao.append('res'+str(len(quadruplo))) 
+            op1 =pilao.pop()
+            op2=pilao.pop()
+            quadruplo.append([popper.pop(),op2,op1,'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo)-1)) 
 
 def p_expp(p): 
     '''expp : '+' exp
@@ -81,8 +87,10 @@ def p_term(p):
     if popper: 
         if popper[-1] == '*' or popper[-1] =='/':
             global quadruplo
-            quadruplo.append([popper.pop(),pilao.pop(),pilao.pop(),'res'+str(len(quadruplo))])
-            pilao.append('res'+str(len(quadruplo)))
+            op1 =pilao.pop()
+            op2=pilao.pop()
+            quadruplo.append([popper.pop(),op2,op1,'res'+str(len(quadruplo))])
+            pilao.append('res'+str(len(quadruplo)-1))
 
 def p_termp(p): 
     '''termp : '/' term 
@@ -229,8 +237,7 @@ def p_asign(p):
 
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
-              | '[' sexp ']' '=' sexp ';' ''' 
-    pp.pprint(quadruplo)
+              | '[' sexp ']' '=' sexp ';' '''
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' block condp''' 

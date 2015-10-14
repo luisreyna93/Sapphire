@@ -32,7 +32,7 @@ def add_to_local_var_dict(var_id, type):
         'type': type,
         'memdir' : memoryCont
     }
-    print_local_var_dict()
+    #print_local_var_dict()
     memoryCont= memoryCont +1
 
 def add_to_global_var_dict(var_id, type):
@@ -41,7 +41,7 @@ def add_to_global_var_dict(var_id, type):
         'type': type,
         'memdir' : memoryCont
     }
-    print_global_var_dict()
+    #print_global_var_dict()
     memoryCont= memoryCont +1
 
 def func_is_repeated(fid):
