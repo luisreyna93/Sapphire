@@ -7,12 +7,18 @@ function void funcion1(arrfloat[15] var5, int var6){
 }
 
 function int funcion(int var1, float var2, arrint[10] var3, arrfloat[15] var4){
-	
+	line(1,2,3,4);
 }
 
 main() {
 	int luis;
-	luis = 1*(2+3-4*5)+6>(2*3+7)&&(3<4+5*6);
+	luis = 5*4	;
+	luis = 5*funcion()	;
+	while(1>2){
+		luis=2+3;
+	}
+	luis=1;
+	print("ddd");
 	int a,b,c;
 	arrint[5] z;
 }
