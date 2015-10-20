@@ -1,5 +1,5 @@
 
-semantic_cube {
+semantic_cube= {
 	('int', '+', 'int') : 'int',
 	('int', '-', 'int') : 'int',
 	('int', '*', 'int') : 'int',

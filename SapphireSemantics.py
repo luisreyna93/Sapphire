@@ -14,7 +14,8 @@ memoryCont = 1000
 
 errors = {
         'REPEATED_DECLARATION_VAR': 'REPEATED_DECLARATION_VAR: Declaracion de variable repetida.',
-        'REPEATED_DECLARATION_FUNC': 'REPEATED_DECLARATION_FUNC: Declaracion de funcion repetida.'
+        'REPEATED_DECLARATION_FUNC': 'REPEATED_DECLARATION_FUNC: Declaracion de funcion repetida.',
+        'TYPE_MISMATCH' : 'TYPE_MISMATCH: Tipos no compatibles'
 }
 
 def add_to_func(fid, ftype, fparams):
