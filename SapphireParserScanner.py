@@ -23,9 +23,11 @@ quadruploStack=[]
 statusCondicion= -1
 whileCondicion=-1
 printType=-1
+forStackAux=[]
 def p_program(p): 
     '''program : vars programp main'''
     pp.pprint(quadruplo)
+    pp.pprint(pilao)
 
 def p_programp(p): 
     '''programp : functions programp
@@ -46,9 +48,9 @@ def p_sexp(p):
             else:
                 print errors['TYPE_MISMATCH']
                 exit(1)
-    else:
-        print 'pilaaaaaa'
-        pp.pprint(pilao)
+    # else:
+    #     print 'pilaaaaaa'
+    #     pp.pprint(pilao)
 
 def p_sexprima(p): 
     '''sexprima : AND sexp
@@ -211,9 +213,6 @@ def p_block(p):
         else:
             global quadruploStack
             salida= quadruploStack.pop()
-            pp.pprint(quadruplo)
-            print 'entro'
-            print len(quadruplo)+1
             quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)+1]
         
         statusCondicion=-1
@@ -302,7 +301,7 @@ def p_asign(p):
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
               | '[' sexp ']' '=' sexp ';' '''
-    quadruplo.append(['=', quadruplo[len(quadruplo)-1][3], '-1', p[-1] ])
+    quadruplo.append(['=',  pilao.pop()[0], '-1', p[-1] ])
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' condaux block condp''' 
@@ -342,19 +341,16 @@ def p_writepaux(p):
     '''writepaux : ''' 
     global printType
     printType=1
-    print '111111'
 
 def p_writepaux2(p): 
     '''writepaux2 : '''
     global printType
     printType=2
-    print '22222222222'
 
 def p_writepaux3(p): 
     '''writepaux3 : '''
     global printType
     printType=3
-    print '3333333333'
 
 def p_writepp(p): 
     '''writepp : ',' writeppaux writep
@@ -364,15 +360,40 @@ def p_writeppaux(p):
     '''writeppaux : ''' 
     global printType
     if printType==1:
-        quadruplo.append(['print','-1','-1',quadruplo[len(quadruplo)-1][3]])
+        quadruplo.append(['print','-1','-1',pilao.pop()[0]])
     elif printType==2:
         quadruplo.append(['print','-1','-1',p[-1]])
     elif printType==3:
         quadruplo.append(['print','-1','-1',p[-1]])
 
 def p_for(p): 
-    '''for : FOR '(' asign ';' sexp ';' sexp ')' block''' 
+    '''for : FOR '(' id '=' sexp  foraux ';' sexp foraux2 ')' block foraux3'''
 
+def p_foraux3(p):
+    '''foraux3 : '''
+    global quadruploStack
+    salida= quadruploStack.pop()
+    quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1],'-1',len(quadruplo)+1]
+    quadruplo.append(['+','1','-1',forStackAux.pop()])
+    quadruplo.append(['goto','-1','-1',salida-1])
+
+def p_foraux2(p):
+    '''foraux2 : '''
+    cond = pilao.pop()
+    quadruploStack.append(len(quadruplo))
+    quadruplo.append(['gotof',cond[0],'-1','-1'])
+
+
+def p_foraux(p):
+    '''foraux : '''
+    valor=pilao.pop()
+    id1=pilao.pop()
+    if local_var_exists(id1[0]):
+        quadruplo.append(['=',valor[0],'-1',id1[0]])
+        forStackAux.append(id1[0])
+    else:
+        print errors['REPEATED_DECLARATION_FUNC']
+        exit(1)
 def p_while(p): 
     '''while : WHILE whileaux '(' sexp ')' whileaux2 block'''
 
@@ -409,6 +430,7 @@ def p_draw(p):
 
 def p_id(p): 
     '''id : ID idp'''
+
 def p_idp(p): 
     '''idp : '[' sexp ']' 
             | '(' idpp ')'
