@@ -453,7 +453,21 @@ def p_idppaux(p):
                 | empty'''  
 
 def p_line(p): 
-    '''line : LINE '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' ''' 
+    '''line : LINE '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
+    pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        print p.lineno(1)
+        print p.lineno(2)
+        print p.lineno(3)
+        exit(1)
+    else:
+        quadruplo.append(['line',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
+
 
 def p_rect(p): 
     '''rect : RECT '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' ''' 
