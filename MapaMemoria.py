@@ -15,29 +15,41 @@ class MapaMemoria:
 				float: que es una lista de dos elementos [direccion de inicio, cantidad actual]
 				string: que es una lista de dos elementos [direccion de inicio, cantidad actual]
 				limite: que es la ultima direccion de memoria del bloque actual
-    	"""
-      	self.int = [ inicio_int, 0 ]
-       	self.float = [ inicio_float, 0 ]
-       	self.string = [ inicio_string, 0 ]
-       	self.limite = limite
+		"""
+		self.int = [ inicio_int, 0 ]
+		self.float = [ inicio_float, 0 ]
+		self.string = [ inicio_string, 0 ]
+		self.limite = limite
 
-    def add_int(self, cont = 1):
-        if ( self.int[0] + self.int[1] + cont ) < self.float[0]:
-            self.int[1] += cont
-            return ( self.int[0] + self.int[1] - cont )
-        else:
-            print 'STACKOVERFLOW: stack pointer exceeded the stack bound.'
+	def add_int(self, cont=1):
+		''' comment '''
+		if ( self.int[0] + self.int[1] + cont ) < self.float[0]:
+			self.int[1] += cont
+			return ( self.int[0] + self.int[1] - cont )
+		else:
+			print 'STACKOVERFLOW: stack pointer exceeded the stack bound.'
 
-    def add_float(self, cont = 1):
-        if ( self.float[0] + self.float[1] + cont ) < self.string[0]:
-            self.float[1] += cont
-            return ( self.float[0] + self.float[1] - cont )
-        else:
-            print 'STACKOVERFLOW: stack pointer exceeded the stack bound.'
+	def add_float(self, cont=1):
+		''' comment '''
+		if ( self.float[0] + self.float[1] + cont ) < self.string[0]:
+			self.float[1] += cont
+			return ( self.float[0] + self.float[1] - cont )
+		else:
+			print 'STACKOVERFLOW: stack pointer exceeded the stack bound.'
 
-    def add_string(self, cont = 1):
-        if ( self.string[0] + self.string[1] + cont ) < self.limit:
-            self.string[1] += cont
-            return ( self.string[0] + self.string[1] - cont )
-        else:
-            print 'STACKOVERFLOW: Stack pointer exceeded the stack bound.'
+	def add_string(self, cont=1):
+		''' comment '''
+		if ( self.string[0] + self.string[1] + cont ) < self.limit:
+			self.string[1] += cont
+			return ( self.string[0] + self.string[1] - cont )
+		else:
+			print 'STACKOVERFLOW: Stack pointer exceeded the stack bound.'
+
+	def add_type(self,tipo):
+		''' comment '''
+		if tipo== 'string':
+		   return self.add_string(1)
+		elif tipo=='int':
+		   return self.add_int(1)
+		elif tipo=='float':
+		   return self.add_float(1)

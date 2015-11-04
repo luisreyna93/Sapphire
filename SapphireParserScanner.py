@@ -3,31 +3,46 @@
 # -----------------------------------------------------------------------------
 import sys
 import Lex
-from SapphireSemantics import errors, add_to_func, func_is_repeated, print_func_dict, add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
+from SapphireSemantics import get_var,errors, add_to_func, func_is_repeated,get_func_quad, print_func_dict,validate_func_params,get_func_return_type, get_func_vars,add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
 from SapphireQuadruples import semantic_cube
 from copy import deepcopy
+from MapaMemoria import MapaMemoria
 import pprint
 pp = pprint.PrettyPrinter()
 
 tokens = Lex.tokens
 
 scope = 1 #scope = 1 (global), scope = 2 (local)
-paramsTemp = {}
+paramsTemp = []
 tipoActual = []
 tipoActualReturn = []
 pilao= []
 popper= []
 quadruplo=[]
 actualFunc=""
-quadruploStack=[]
+quadruploStack=[] #saltos para los quadruplos
 statusCondicion= -1
 whileCondicion=-1
 printType=-1
 forStackAux=[]
+firstMain=0; #variable para saber que es la primera instruccion del main y saber a donde brincar en el primer quadruplo
+funcquad=-1; # variable para saber cual es el quadruplo de la primera insturccion de cada funcion
+funcParams=0 #numero para saber cuantos parametros tiene la funcion llamada y sacar esa cantidad de pila o 
+constant_dict = {}
+
+mem_local        = MapaMemoria(0, 1000, 2000, 3000)
+mem_global       = MapaMemoria(3000, 4000,5000, 6000)
+mem_constants    = MapaMemoria(6000,7000, 8000, 9000)
+mem_temps        = MapaMemoria(  9000,10000, 11000, 12000)
+
 def p_program(p): 
-    '''program : vars programp main'''
+    '''program : firstquad vars programp main'''
     pp.pprint(quadruplo)
-    pp.pprint(pilao)
+    #pp.pprint(pilao)
+
+def p_firstquad(p):
+    '''firstquad : '''
+    quadruplo.append(['goto','-1','-1','-1'])
 
 def p_programp(p): 
     '''programp : functions programp
@@ -43,14 +58,15 @@ def p_sexp(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                quadruplo.append([operando,op2[0],op1[0],'res'+str(len(quadruplo))])
-                pilao.append(['res'+str(len(quadruplo)-1),tipo])
+                res =mem_temps.add_type(tipo)
+                quadruplo.append([operando,op2[0],op1[0],res])
+                pilao.append([res,tipo])
             else:
                 print errors['TYPE_MISMATCH']
                 exit(1)
     # else:
     #     print 'pilaaaaaa'
-    #     pp.pprint(pilao)
+    #     #pp.pprint(pilao)
 
 def p_sexprima(p): 
     '''sexprima : AND sexp
@@ -69,8 +85,9 @@ def p_expression(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                quadruplo.append([operando,op2[0],op1[0],'res'+str(len(quadruplo))])
-                pilao.append(['res'+str(len(quadruplo)-1),tipo])
+                res =mem_temps.add_type(tipo)
+                quadruplo.append([operando,op2[0],op1[0],res])
+                pilao.append([res,tipo])
             else:
                 print errors['TYPE_MISMATCH']
                 exit(1)
@@ -96,8 +113,9 @@ def p_exp(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                quadruplo.append([operando,op2[0],op1[0],'res'+str(len(quadruplo))])
-                pilao.append(['res'+str(len(quadruplo)-1),tipo])
+                res =mem_temps.add_type(tipo)
+                quadruplo.append([operando,op2[0],op1[0],res])
+                pilao.append([res,tipo])
             else:
                 print errors['TYPE_MISMATCH']
                 exit(1)
@@ -120,8 +138,9 @@ def p_term(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                quadruplo.append([operando,op2[0],op1[0],'res'+str(len(quadruplo))])
-                pilao.append(['res'+str(len(quadruplo)-1),tipo])
+                res =mem_temps.add_type(tipo)
+                quadruplo.append([operando,op2[0],op1[0],res])
+                pilao.append([res,tipo])
             else:
                 print errors['TYPE_MISMATCH']
                 exit(1)
@@ -157,17 +176,23 @@ def p_cons(p):
 def p_tipoi(p):
     '''tipoi :'''
     global pilao
-    pilao.append([p[-1], 'int'])
+    if p[-1] not in constant_dict:
+        constant_dict[p[-1]] = mem_constants.add_type('int')
+    pilao.append([constant_dict[p[-1]], 'int'])
 
 def p_tipof(p):
     '''tipof :'''
     global pilao
-    pilao.append([p[-1], 'float'])
+    if p[-1] not in constant_dict:
+        constant_dict[p[-1]] = mem_constants.add_type('float')
+    pilao.append([constant_dict[p[-1]], 'float'])
 
 def p_tipos(p):
     '''tipos :'''
     global pilao
-    pilao.append([p[-1], 'string'])
+    if p[-1] not in constant_dict:
+        constant_dict[p[-1]] = mem_constants.add_type('string')
+    pilao.append([constant_dict[p[-1]], 'string'])
 
 def p_returntype(p): 
     '''returntype : VOID
@@ -188,7 +213,7 @@ def p_arrp(p):
     '''arrp : '[' CTEI ']' '''  
 
 def p_main(p): 
-    '''main : MAIN '(' ')' block ''' 
+    '''main : MAIN firstmain '(' ')' block ''' 
     global paramsTemp
     global tipoActualReturn
     global actualFunc
@@ -197,9 +222,14 @@ def p_main(p):
         exit(1)
     else:
         actualFunc=p[1]
-        add_to_func(p[1], 'None', paramsTemp)
-        paramsTemp = {}
+        add_to_func(p[1], 'None', paramsTemp, -1)
+        paramsTemp = []
         #print_func_dict()
+
+def p_firstmain(p):
+    '''firstmain : '''
+    global firstMain
+    firstMain=1;
 
 def p_block(p): 
     '''block : '{' body '}' ''' 
@@ -223,6 +253,10 @@ def p_body(p):
 def p_statmp(p): 
     '''statmp : statm statmp
               | empty''' 
+    global firstMain
+    if( firstMain):
+        quadruplo[0] = [quadruplo[0][0],quadruplo[0][1],'-1',len(quadruplo)]
+        firstMain=0;
 
 def p_statm(p): 
     '''statm : asign
@@ -231,24 +265,34 @@ def p_statm(p):
              | for
              | while 
              | draw
+             | id ';'
              | empty''' #checar esto
 
 def p_functions(p): 
-    '''functions : FUNCTION returntype ID '(' functionsp ')' block
+    '''functions : FUNCTION returntype ID '(' functionsp ')' firstfuncquad block
             | empty''' 
     global paramsTemp
     global tipoActualReturn
     global actualFunc
+    global funcquad
     if func_is_repeated(p[3]):
         print errors['REPEATED_DECLARATION_FUNC']
         exit(1)
     else:
         actualFunc=p[3]
-        add_to_func(p[3], tipoActualReturn.pop(), paramsTemp)
-        paramsTemp = {}
+        add_to_func(p[3], tipoActualReturn.pop(), paramsTemp,funcquad)
+        paramsTemp = []
+        quadruplo.append(['retorno','-1','-1','-1'])
         #print_func_dict()
 
-
+def p_firstfuncquad(p):
+    '''firstfuncquad : '''
+    global funcquad
+    funcquad= len(quadruplo)
+    global mem_local
+    mem_local= MapaMemoria(0, 1000, 2000, 3000)# borrar mem_local para empezar 
+    global mem_temps
+    mem_temps= MapaMemoria(  9000,10000, 11000, 12000)# borrar mem_local
 def p_functionsp(p): 
     '''functionsp : param
                   | empty''' 
@@ -256,7 +300,7 @@ def p_functionsp(p):
 def p_param(p): 
     '''param : type ID paramp''' 
     global tipoActual
-    paramsTemp.update({p[2] : tipoActual.pop()})
+    paramsTemp.append([p[2], tipoActual.pop()])
 
 def p_paramp(p): 
     '''paramp : ',' param 
@@ -267,6 +311,10 @@ def p_vars(p):
             | empty''' 
     global scope
     scope=2;
+    global firstMain
+    if( firstMain):
+        quadruplo[0] = [quadruplo[0][0],quadruplo[0][1],'-1',len(quadruplo)]
+        firstMain=0;
 
 def p_varsp(p): 
     '''varsp : type varspp ';' varsp
@@ -282,13 +330,13 @@ def p_varspp(p):
             print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
-            add_to_global_var_dict(p[1],tipo)
+            add_to_global_var_dict(mem_global,p[1],tipo)
     else:
         if local_var_exists(p[1]):
             print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
-            add_to_local_var_dict(p[1], tipo)
+            add_to_local_var_dict(mem_local,p[1], tipo)
 
 def p_varsppaux(p): 
     '''varsppaux : ',' varspp
@@ -301,7 +349,7 @@ def p_asign(p):
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
               | '[' sexp ']' '=' sexp ';' '''
-    quadruplo.append(['=',  pilao.pop()[0], '-1', p[-1] ])
+    quadruplo.append(['=',  pilao.pop()[0], '-1', get_var(p[-1])[0] ])
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' condaux block condp''' 
@@ -388,12 +436,15 @@ def p_foraux(p):
     '''foraux : '''
     valor=pilao.pop()
     id1=pilao.pop()
-    if local_var_exists(id1[0]):
-        quadruplo.append(['=',valor[0],'-1',id1[0]])
-        forStackAux.append(id1[0])
-    else:
-        print errors['REPEATED_DECLARATION_FUNC']
-        exit(1)
+    #checar
+    #if local_var_exists(id1[0]):
+    quadruplo.append(['=',valor[0],'-1',id1[0]])
+    forStackAux.append(id1[0])
+    # else:
+    #     print '111'
+    #     print_local_var_dict()
+    #     print errors['NOT_DECLARED_VAR']
+    #     exit(1)
 def p_while(p): 
     '''while : WHILE whileaux '(' sexp ')' whileaux2 block'''
 
@@ -435,35 +486,53 @@ def p_idp(p):
     '''idp : '[' sexp ']' 
             | '(' idpp ')'
             | empty''' 
-    global pilao 
+    global pilao
+    global funcParams 
     elmt= p[1]
     if elmt == '[':
         pilao.append([p[-1], 'int'])
     elif elmt == '(':
-        pilao.append([p[-1], 'float'])
+        if func_is_repeated(p[-1]):
+            tempparams=[]
+            for x in range(0,funcParams):
+                tempparams.append(pilao.pop())
+            if validate_func_params(p[-1],deepcopy(tempparams)):
+                quadruplo.append(['era', get_func_vars(p[-1]),'-1','-1'])
+                for x in tempparams:
+                    quadruplo.append(['param',x[0],'-1', funcParams ])
+                    funcParams= funcParams-1
+                quadruplo.append(['gosub', get_func_quad(p[-1]),'-1','-1'])
+                pilao.append([p[-1], get_func_return_type(p[-1]) ])
+            else:
+                print errors['PARAMS_FUNC_BADQUANT']
+                exit(-1)
+
+        else: 
+            print errors['NOT_DECLARED_FUNCTION']
+            exit(-1)
     else:
-        pilao.append([p[-1], 'float'])
+        res=get_var(p[-1])
+        pilao.append([res[0], res[1]])
 
 def p_idpp(p): 
     '''idpp : sexp idppaux
-            | empty'''  
+            | empty''' 
 
 def p_idppaux(p): 
     '''idppaux : ',' idpp 
                 | empty'''  
+    global funcParams
+    funcParams= funcParams +1
 
 def p_line(p): 
     '''line : LINE '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
-    pp.pprint(pilao)
+    ##pp.pprint(pilao)
     par1=pilao.pop() 
     par2=pilao.pop() 
     par3=pilao.pop()
     par4=pilao.pop()
     if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
         print errors['TYPE_MISMATCH']
-        print p.lineno(1)
-        print p.lineno(2)
-        print p.lineno(3)
         exit(1)
     else:
         quadruplo.append(['line',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
@@ -471,27 +540,102 @@ def p_line(p):
 
 def p_rect(p): 
     '''rect : RECT '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' ''' 
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['rect',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_teapot(p): 
     '''teapot : TEAPOT '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['teapot',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_triangle(p): 
     '''triangle : TRIANGLE '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['triangle',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_cube(p): 
     '''cube : CUBE '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['cube',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_color(p): 
     '''color : COLOR '(' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['color',[par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_arc(p): 
     '''arc : ARC '(' sexp ',' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    par4=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' or par4[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['arc',[par4[0],par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_circe(p): 
     '''circle : CIRCLE '(' sexp ',' sexp ',' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop() 
+    par2=pilao.pop() 
+    par3=pilao.pop()
+    if par1[1] != 'float' or par2[1] != 'float' or par3[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['circle',[par3[0],par2[0],par1[0]],'-1','-1'])
 
 def p_width(p): 
     '''width : WIDTH '(' sexp ')' ';' '''
+    #pp.pprint(pilao)
+    par1=pilao.pop()
+    if par1[1] != 'float' :
+        print errors['TYPE_MISMATCH']
+        exit(1)
+    else:
+        quadruplo.append(['width',par1[0],'-1','-1'])
 
 def p_empty(p): 
     '''empty :''' 
