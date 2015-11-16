@@ -32,7 +32,8 @@ reserved = {
     "width":"WIDTH",
     "function":"FUNCTION",
     "void":"VOID",
-    "main":"MAIN"
+    "main":"MAIN",
+    "return": "RETURN"
 }
 tokens = [
     'CTEI', 'CTEF', 'CTES', 'DIFF', 'EQ', 'GTEQ', 'LTEQ', 'AND', 'OR', 'ID'

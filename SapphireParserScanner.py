@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 import sys
 import Lex
-from SapphireSemantics import get_var,errors, add_to_func, func_is_repeated,get_func_quad, print_func_dict,validate_func_params,get_func_return_type, get_func_vars,add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
+from SapphireSemantics import validate_arr,func_dic,global_vars_dic, get_var,errors, add_to_func, func_is_repeated,get_func_quad, print_func_dict,validate_func_params,get_func_return_type, get_func_vars,add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
 from SapphireQuadruples import semantic_cube
 from copy import deepcopy
 from MapaMemoria import MapaMemoria
@@ -29,15 +29,18 @@ firstMain=0; #variable para saber que es la primera instruccion del main y saber
 funcquad=-1; # variable para saber cual es el quadruplo de la primera insturccion de cada funcion
 funcParams=0 #numero para saber cuantos parametros tiene la funcion llamada y sacar esa cantidad de pila o 
 constant_dict = {}
+arrlen= 1 #variable para saber si es arreglo y de cuanto
+ret=None # variable para saber si la funcion regreso algo 
 
-mem_local        = MapaMemoria(0, 1000, 2000, 3000)
-mem_global       = MapaMemoria(3000, 4000,5000, 6000)
-mem_constants    = MapaMemoria(6000,7000, 8000, 9000)
-mem_temps        = MapaMemoria(  9000,10000, 11000, 12000)
+mem_local        = MapaMemoria(0, 1000, 2000, 3000,4000)
+mem_global       = MapaMemoria(4000,5000, 6000,7000, 8000)
+mem_constants    = MapaMemoria(8000,9000,10000, 11000, 12000)
+mem_temps        = MapaMemoria(12000,13000,14000,15000,16000)
 
 def p_program(p): 
     '''program : firstquad vars programp main'''
     pp.pprint(quadruplo)
+    #pp.pprint(constant_dict)
     #pp.pprint(pilao)
 
 def p_firstquad(p):
@@ -58,7 +61,7 @@ def p_sexp(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                res =mem_temps.add_type(tipo)
+                res =mem_temps.add_type(tipo,1)
                 quadruplo.append([operando,op2[0],op1[0],res])
                 pilao.append([res,tipo])
             else:
@@ -85,7 +88,7 @@ def p_expression(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                res =mem_temps.add_type(tipo)
+                res =mem_temps.add_type(tipo,1)
                 quadruplo.append([operando,op2[0],op1[0],res])
                 pilao.append([res,tipo])
             else:
@@ -113,7 +116,7 @@ def p_exp(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                res =mem_temps.add_type(tipo)
+                res =mem_temps.add_type(tipo,1)
                 quadruplo.append([operando,op2[0],op1[0],res])
                 pilao.append([res,tipo])
             else:
@@ -138,7 +141,7 @@ def p_term(p):
             op2=pilao.pop()
             tipo=semantic_cube.get((op2[1],operando, op1[1]), 'error')
             if tipo != 'error' :
-                res =mem_temps.add_type(tipo)
+                res =mem_temps.add_type(tipo,1)
                 quadruplo.append([operando,op2[0],op1[0],res])
                 pilao.append([res,tipo])
             else:
@@ -177,21 +180,21 @@ def p_tipoi(p):
     '''tipoi :'''
     global pilao
     if p[-1] not in constant_dict:
-        constant_dict[p[-1]] = mem_constants.add_type('int')
+        constant_dict[p[-1]] = mem_constants.add_type('int',1)
     pilao.append([constant_dict[p[-1]], 'int'])
 
 def p_tipof(p):
     '''tipof :'''
     global pilao
     if p[-1] not in constant_dict:
-        constant_dict[p[-1]] = mem_constants.add_type('float')
+        constant_dict[p[-1]] = mem_constants.add_type('float',1)
     pilao.append([constant_dict[p[-1]], 'float'])
 
 def p_tipos(p):
     '''tipos :'''
     global pilao
     if p[-1] not in constant_dict:
-        constant_dict[p[-1]] = mem_constants.add_type('string')
+        constant_dict[p[-1]] = mem_constants.add_type('string',1)
     pilao.append([constant_dict[p[-1]], 'string'])
 
 def p_returntype(p): 
@@ -210,10 +213,12 @@ def p_type(p):
     tipoActual.append(p[1])
 
 def p_arrp(p): 
-    '''arrp : '[' CTEI ']' '''  
+    '''arrp : '[' CTEI ']' '''
+    global arrlen
+    arrlen= p[2]
 
 def p_main(p): 
-    '''main : MAIN firstmain '(' ')' block ''' 
+    '''main : MAIN firstmain '(' ')' firstfuncquad block ''' 
     global paramsTemp
     global tipoActualReturn
     global actualFunc
@@ -266,7 +271,13 @@ def p_statm(p):
              | while 
              | draw
              | id ';'
-             | empty''' #checar esto
+             | ret
+             | empty''' #todo:checar esto
+
+def p_ret(p):
+    '''ret : RETURN sexp ';' '''
+    global ret
+    ret=pilao.pop()
 
 def p_functions(p): 
     '''functions : FUNCTION returntype ID '(' functionsp ')' firstfuncquad block
@@ -279,8 +290,16 @@ def p_functions(p):
         print errors['REPEATED_DECLARATION_FUNC']
         exit(1)
     else:
+        global ret
         actualFunc=p[3]
-        add_to_func(p[3], tipoActualReturn.pop(), paramsTemp,funcquad)
+        tipo=tipoActualReturn.pop()
+        if ret and (tipo != 'void') and (ret[1]==tipo):
+            quadruplo.append(['return','-1','-1',ret[0]])
+        elif tipo != 'void' or ret:
+            print errors['RETURN_TYPE_FUNC_MISSMATCH']
+            exit(1)
+        ret= None
+        add_to_func(p[3], tipo, paramsTemp,funcquad)
         paramsTemp = []
         quadruplo.append(['retorno','-1','-1','-1'])
         #print_func_dict()
@@ -290,9 +309,9 @@ def p_firstfuncquad(p):
     global funcquad
     funcquad= len(quadruplo)
     global mem_local
-    mem_local= MapaMemoria(0, 1000, 2000, 3000)# borrar mem_local para empezar 
+    mem_local= MapaMemoria(0, 1000, 2000, 3000,4000)# borrar mem_local para empezar 
     global mem_temps
-    mem_temps= MapaMemoria(  9000,10000, 11000, 12000)# borrar mem_local
+    mem_temps=MapaMemoria(12000,13000,14000,15000,16000)# borrar mem_local
 def p_functionsp(p): 
     '''functionsp : param
                   | empty''' 
@@ -323,6 +342,7 @@ def p_varsp(p):
 def p_varspp(p): 
     '''varspp : ID varsppaux'''
     global tipoActual
+    global arrlen
     tipo= tipoActual.pop()
     tipoActual.append(tipo)
     if scope==1:
@@ -330,13 +350,15 @@ def p_varspp(p):
             print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
-            add_to_global_var_dict(mem_global,p[1],tipo)
+            add_to_global_var_dict(mem_global,p[1],tipo,arrlen)
+            arrlen=1
     else:
         if local_var_exists(p[1]):
             print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
         else:
-            add_to_local_var_dict(mem_local,p[1], tipo)
+            add_to_local_var_dict(mem_local,p[1], tipo,arrlen)
+            arrlen=1
 
 def p_varsppaux(p): 
     '''varsppaux : ',' varspp
@@ -345,11 +367,26 @@ def p_varsppaux(p):
 def p_asign(p): 
     '''asign : vars
               | ID asignp''' 
-
+#todo: asignacion de arreglos
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
               | '[' sexp ']' '=' sexp ';' '''
-    quadruplo.append(['=',  pilao.pop()[0], '-1', get_var(p[-1])[0] ])
+    if p[1] == '[':
+        aux1=pilao.pop() # por la forma de la sintaxis este es el valor a igualar
+        aux=pilao.pop()
+        if(aux[1] != 'int'): #validar si la superexp es id para marcar error
+            print errors['TYPE_MISMATCH']
+            exit(-1)
+        res1=validate_arr(p[-1]) #por ser sexp se hace pop
+        quadruplo.append(['ver', aux[0],0,int(res1[2])-1])
+        res =mem_temps.add_type('int',1)
+        if str(res1[0]) not in constant_dict:
+            constant_dict[str(res1[0])] = mem_constants.add_type('int',1)
+        quadruplo.append(['+', aux[0],constant_dict[str(res1[0])],res])
+        quadruplo.append(['=',  aux1[0], '-1', res])
+        pp.pprint(constant_dict)
+    else:
+        quadruplo.append(['=',  pilao.pop()[0], '-1', get_var(p[-1])[0] ])
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' condaux block condp''' 
@@ -490,7 +527,15 @@ def p_idp(p):
     global funcParams 
     elmt= p[1]
     if elmt == '[':
-        pilao.append([p[-1], 'int'])
+        aux=pilao.pop()
+        if(aux[1] != 'int'): #validar si la superexp es id para marcar error
+            print errors['TYPE_MISMATCH']
+            exit(-1)
+        res1=validate_arr(p[-1]) #por ser sexp se hace pop
+        quadruplo.append(['ver', aux[0],0,int(res1[2])-1])
+        res =mem_temps.add_type('int',1)
+        quadruplo.append(['+', aux[0],res1[0],res])
+        pilao.append([res, res1[1]]) # el quadruplo cuando es arreglo lo ponemos diferente para identificar que hay que checar onruntime
     elif elmt == '(':
         if func_is_repeated(p[-1]):
             tempparams=[]
@@ -502,7 +547,12 @@ def p_idp(p):
                     quadruplo.append(['param',x[0],'-1', funcParams ])
                     funcParams= funcParams-1
                 quadruplo.append(['gosub', get_func_quad(p[-1]),'-1','-1'])
-                pilao.append([p[-1], get_func_return_type(p[-1]) ])
+                if get_func_return_type(p[-1]) != 'void':
+                    res =mem_temps.add_type(get_func_return_type(p[-1]),1)
+                    quadruplo.append(['=', p[-1],'-1',res])
+                    pilao.append([res, get_func_return_type(p[-1]) ])
+                pp.pprint(pilao)
+                pp.pprint(constant_dict)
             else:
                 print errors['PARAMS_FUNC_BADQUANT']
                 exit(-1)
@@ -661,4 +711,16 @@ if(len(sys.argv) > 1):
     result = yacc.parse(string)
 else:
     print "Error"
+
+output_dict = {
+            'funcs': func_dic,
+            'quadruples': quadruplo ,
+            'constants': constant_dict,
+            'globals': global_vars_dic,
+    }
+import json
+with open('obj.json', 'w') as fp:
+    json.dump(output_dict,fp)
+
+
  

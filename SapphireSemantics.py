@@ -18,7 +18,8 @@ errors = {
         'TYPE_MISMATCH' : 'TYPE_MISMATCH: Tipos no compatibles',
         'NOT_DECLARED_FUNCTION' : 'NOT_DECLARED_FUNCTION: funcion no declarada',
         'PARAMS_FUNC_BADQUANT' : 'PARAMS_FUNC_BADQUANT: cantidad de parametros incorrecto',
-        'NOT_DECLARED_VAR' : 'NOT_DECLARED_VAR: variable no declarada'
+        'NOT_DECLARED_VAR' : 'NOT_DECLARED_VAR: variable no declarada',
+        'RETURN_TYPE_FUNC_MISSMATCH' : 'RETURN_TYPE_FUNC_MISSMATCH: el retorno de la funcion no es valido'
 }
 def get_func_vars(func):
     return len(func_dic[func]['localVars'])+ len(func_dic[func]['params'])
@@ -48,30 +49,39 @@ def add_to_func(fid, ftype, fparams,fquad):
         'localVars' : deepcopy(local_var_dict),
         'quad' : fquad
     }
+    print_func_dict()
     local_var_dict={}
 
-def add_to_local_var_dict(mem,var_id, type):
-    num= mem.add_type(type)
+def add_to_local_var_dict(mem,var_id, type,cant):
+    num= mem.add_type(type,cant)
     local_var_dict[var_id] = {
         'type': type,
-        'memdir' : num
+        'memdir' : num,
+        'size': cant
     }
-    #print_local_var_dict()
+    print_local_var_dict()
     #memoryCont= memoryCont +1
 
-def add_to_global_var_dict(mem,var_id, type):
-    num= mem.add_type(type)
+def add_to_global_var_dict(mem,var_id, type,cant):
+    num= mem.add_type(type,cant)
     global_vars_dic[var_id] = {
         'type': type,
-        'memdir' : num
+        'memdir' : num,
+        'size': cant
     }
-    #print_global_var_dict()
+    print_global_var_dict()
     #memoryCont= memoryCont +1
 def get_var(id):
     #print id
     if id in local_var_dict:
+        if 'arr' in local_var_dict[id]['type']:
+            print errors['NOT_DECLARED_VAR']
+            exit(-1)
         return [local_var_dict[id]['memdir'],local_var_dict[id]['type']]
     elif id in global_vars_dic:
+        if 'arr' in global_vars_dic[id]['type']:
+            print errors['NOT_DECLARED_VAR']
+            exit(-1)
         return [global_vars_dic[id]['memdir'],global_vars_dic[id]['type']]
     else :
         print errors['NOT_DECLARED_VAR']
@@ -86,23 +96,45 @@ def global_var_exists(vid):
         return True
     else:
         return False
+#todo: no creo que deba checar en global porque no podrias declarar una variable global y local con el mismo nombre
 def local_var_exists(vid):
     if vid in global_vars_dic or vid in local_var_dict:
         return True
     else:
         return False
 
-def global_is_repeated(vid):
-    if vid in global_vars_dic:
-        return True
-    else:
-        return False
+# def global_is_repeated(vid):
+#     if vid in global_vars_dic:
+#         return True
+#     else:
+#         return False
 
-def local_is_repeated(vid):
-    if vid in global_vars_dic or vid in local_var_dict:
-        return True
-    else:
-        return False
+# def local_is_repeated(vid):
+#     if vid in global_vars_dic or vid in local_var_dict:
+#         return True
+#     else:
+#         return False
+
+#similar a get_var() pero para arreglos
+def validate_arr(vid):
+    error = False
+    if vid in local_var_dict:
+        if 'arr' not in local_var_dict[vid]['type']:
+            error=True
+        else:
+            print_local_var_dict
+            return [local_var_dict[vid]['memdir'],(local_var_dict[vid]['type']).replace('arr',''),local_var_dict[vid]['size']]
+
+    if vid in global_vars_dic:
+        if 'arr' not in global_vars_dic[vid]['type']:
+            error=True
+        else:
+            return [global_vars_dic[vid]['memdir'],(global_vars_dic[vid]['type']).replace('arr',''),global_vars_dic[vid]['size']]
+    
+    print errors['NOT_DECLARED_VAR']
+    exit(-1)
+
+
 
 def print_func_dict():
     print "\nFunciones"

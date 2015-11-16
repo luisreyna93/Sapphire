@@ -39,6 +39,17 @@ semantic_cube= {
 	('int', '==', 'float') : 'bool',
 	('int', '<>', 'float') : 'bool',
 
+	('float', '+', 'int') : 'float',
+	('float', '-', 'int') : 'float',
+	('float', '*', 'int') : 'float',
+	('float', '/', 'int') : 'float',
+	('float', '>', 'int') : 'bool',
+	('float', '<', 'int') : 'bool',
+	('float', '>=', 'int') : 'bool',
+	('float', '<=', 'int') : 'bool',
+	('float', '==', 'int') : 'bool',
+	('float', '<>', 'int') : 'bool',
+
 	('bool', '&&', 'bool') : 'bool',
 	('bool', '||', 'bool') : 'bool',
 	('bool', '<', 'bool') : 'bool',
