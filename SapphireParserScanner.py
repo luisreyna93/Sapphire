@@ -248,7 +248,7 @@ def p_block(p):
         else:
             global quadruploStack
             salida= quadruploStack.pop()
-            quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)+1]
+            quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)]
         
         statusCondicion=-1
 
@@ -280,7 +280,7 @@ def p_ret(p):
     ret=pilao.pop()
 
 def p_functions(p): 
-    '''functions : FUNCTION returntype ID '(' functionsp ')' firstfuncquad block
+    '''functions : FUNCTION returntype ID '(' functionsp ')' firstfuncquad block firstfuncquad2
             | empty''' 
     global paramsTemp
     global tipoActualReturn
@@ -294,7 +294,7 @@ def p_functions(p):
         actualFunc=p[3]
         tipo=tipoActualReturn.pop()
         if ret and (tipo != 'void') and (ret[1]==tipo):
-            quadruplo.append(['return','-1','-1',ret[0]])
+            quadruplo.append(['return',actualFunc,'-1',ret[0]])
         elif tipo != 'void' or ret:
             print errors['RETURN_TYPE_FUNC_MISSMATCH']
             exit(1)
@@ -308,10 +308,15 @@ def p_firstfuncquad(p):
     '''firstfuncquad : '''
     global funcquad
     funcquad= len(quadruplo)
+
+
+def p_firstfuncquad2(p):
+    '''firstfuncquad2 : '''
     global mem_local
     mem_local= MapaMemoria(0, 1000, 2000, 3000,4000)# borrar mem_local para empezar 
     global mem_temps
     mem_temps=MapaMemoria(12000,13000,14000,15000,16000)# borrar mem_local
+    
 def p_functionsp(p): 
     '''functionsp : param
                   | empty''' 
@@ -319,7 +324,9 @@ def p_functionsp(p):
 def p_param(p): 
     '''param : type ID paramp''' 
     global tipoActual
-    paramsTemp.append([p[2], tipoActual.pop()])
+    tipo= tipoActual.pop()
+    paramsTemp.append([p[2],tipo])
+    add_to_local_var_dict(mem_local,p[2], tipo,1)
 
 def p_paramp(p): 
     '''paramp : ',' param 
@@ -366,7 +373,7 @@ def p_varsppaux(p):
 
 def p_asign(p): 
     '''asign : vars
-              | ID asignp''' 
+              | id asignp''' 
 #todo: asignacion de arreglos
 def p_asignp(p): 
     '''asignp : '=' sexp ';'
@@ -386,7 +393,8 @@ def p_asignp(p):
         quadruplo.append(['=',  aux1[0], '-1', res])
         pp.pprint(constant_dict)
     else:
-        quadruplo.append(['=',  pilao.pop()[0], '-1', get_var(p[-1])[0] ])
+        pp.pprint(pilao)
+        quadruplo.append(['=',  pilao.pop()[0], '-1', pilao.pop()[0] ])
 
 def p_cond(p): 
     '''cond : IF '(' sexp ')' condaux block condp''' 
@@ -459,7 +467,7 @@ def p_foraux3(p):
     global quadruploStack
     salida= quadruploStack.pop()
     quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1],'-1',len(quadruplo)+1]
-    quadruplo.append(['+','1','-1',forStackAux.pop()])
+    #quadruplo.append(['+','1','-1',forStackAux.pop()])
     quadruplo.append(['goto','-1','-1',salida-1])
 
 def p_foraux2(p):
@@ -535,18 +543,18 @@ def p_idp(p):
         quadruplo.append(['ver', aux[0],0,int(res1[2])-1])
         res =mem_temps.add_type('int',1)
         quadruplo.append(['+', aux[0],res1[0],res])
-        pilao.append([res, res1[1]]) # el quadruplo cuando es arreglo lo ponemos diferente para identificar que hay que checar onruntime
+        pilao.append([[res], res1[1]]) # el quadruplo cuando es arreglo lo ponemos diferente para identificar que hay que checar onruntime
     elif elmt == '(':
         if func_is_repeated(p[-1]):
             tempparams=[]
             for x in range(0,funcParams):
                 tempparams.append(pilao.pop())
             if validate_func_params(p[-1],deepcopy(tempparams)):
-                quadruplo.append(['era', get_func_vars(p[-1]),'-1','-1'])
+                quadruplo.append(['era', get_func_vars(p[-1]),p[-1],'-1'])
                 for x in tempparams:
                     quadruplo.append(['param',x[0],'-1', funcParams ])
                     funcParams= funcParams-1
-                quadruplo.append(['gosub', get_func_quad(p[-1]),'-1','-1'])
+                quadruplo.append(['gosub', get_func_quad(p[-1]),p[-1],'-1'])
                 if get_func_return_type(p[-1]) != 'void':
                     res =mem_temps.add_type(get_func_return_type(p[-1]),1)
                     quadruplo.append(['=', p[-1],'-1',res])

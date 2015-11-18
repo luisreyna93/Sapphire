@@ -19,10 +19,12 @@ errors = {
         'NOT_DECLARED_FUNCTION' : 'NOT_DECLARED_FUNCTION: funcion no declarada',
         'PARAMS_FUNC_BADQUANT' : 'PARAMS_FUNC_BADQUANT: cantidad de parametros incorrecto',
         'NOT_DECLARED_VAR' : 'NOT_DECLARED_VAR: variable no declarada',
-        'RETURN_TYPE_FUNC_MISSMATCH' : 'RETURN_TYPE_FUNC_MISSMATCH: el retorno de la funcion no es valido'
+        'RETURN_TYPE_FUNC_MISSMATCH' : 'RETURN_TYPE_FUNC_MISSMATCH: el retorno de la funcion no es valido',
+        'ARR_OVERFLOW': 'ARR_OVERFLOW: el arreglo no tiene ese indice'
 }
 def get_func_vars(func):
-    return len(func_dic[func]['localVars'])+ len(func_dic[func]['params'])
+    return len(func_dic[func]['localVars'])
+    #return len(func_dic[func]['localVars'])+ len(func_dic[func]['params'])
 
 
 def get_func_quad(func):

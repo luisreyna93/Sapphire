@@ -1,47 +1,72 @@
 
 import json
 import pprint
-
+from SapphireSemantics import errors
+from copy import deepcopy
 pp = pprint.PrettyPrinter()
 global_dic={}
 local_dic={}
 temp_dic={}
 const_dic={}
 arr_dic={} #dictionary para saber el limite del arreglo
-stack=[]
+stack=[] #Stack para guardar las memorias 
+params=[] #parametros de cada funcion
 def get(q1):
 	try:
-		if q1/4000 < 1:
-			return local_dic[q1][0]
-		elif q1/8000 < 1:
-			return global_dic[q1][0]
-		elif q1/12000 < 1:
-			return const_dic[q1][0]
+		if isinstance(q1, list):
+			q1= get(q1[0])
+		if q1 in global_dic:
+			return global_dic[q1]
+
+		if q1/4000.0 < 1:
+			return local_dic[q1]
+		elif q1/8000.0 < 1:
+			return global_dic[q1]
+		elif q1/12000.0 < 1:
+			return const_dic[q1]
+		elif q1/16000.0 <1:
+			return temp_dic[q1]
 		else:
-			return temp_dic[q1][0]
+			return global_dic[q1]
 	except:
 		print "Variable sin valor"
+		print q1
+		print isinstance(q1, list)
+		pp.pprint(local_dic)
+		pp.pprint(temp_dic)
+		pp.pprint(const_dic)
+		pp.pprint(global_dic)
 		exit(-1)
 def suma(q1,q2,q3):
-	global temp_dic
-	temp_dic[q3]=[float(get(q1))+float(get(q2))]
-	print temp_dic
+	try:
+		global temp_dic
+		temp_dic[q3]=float(get(q1))+float(get(q2))
+	except:
+		pp.pprint(local_dic)
+		pp.pprint(temp_dic)
+		pp.pprint(const_dic)
+		pp.pprint(global_dic)
+		exit(-1)
+
+	#print temp_dic
 
 def resta(q1,q2,q3):
 	global temp_dic
-	temp_dic[q3]=[float(get(q1))-float(get(q2))]
+	temp_dic[q3]=float(get(q1))-float(get(q2))
 
 def mult(q1,q2,q3):
 	global temp_dic
-	temp_dic[q3]=[float(get(q1))*float(get(q2))]
-	print temp_dic
+	temp_dic[q3]=float(get(q1))*float(get(q2))
+	#print temp_dic
 
 def div(q1,q2,q3):
 	global temp_dic
-	temp_dic[q3]=[float(get(q1))/float(get(q2))]
+	temp_dic[q3]=float(get(q1))/float(get(q2))
 
 def asig(q1,q2,q3):
 	#todo: agregar funcionalidad para arreglo
+	if isinstance(q3, list):
+		q3= get(q3[0])
 	if q3/4000 < 1:
 		global local_dic
 		local_dic[q3]=get(q1)
@@ -64,7 +89,8 @@ def goto(q1,q2,q3):
 
 def gotof(q1,q2,q3):
 	global count
-	if q1: count=q3
+	if not temp_dic[q1]:
+		count=q3-1
 
 
 def fill_local_dic(name):
@@ -80,12 +106,11 @@ def fill_local_dic(name):
 		else:
 			local_dic[value['memdir']]= None
 def greater(q1,q2,q3):
-	global temp_dic
 	if float(get(q1))>float(get(q2)):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 
 def less(q1,q2,q3):
 	global temp_dic
@@ -93,7 +118,7 @@ def less(q1,q2,q3):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 	
 def diff(q1,q2,q3):
 	global temp_dic
@@ -101,21 +126,21 @@ def diff(q1,q2,q3):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 def lessEqual(q1,q2,q3):
 	global temp_dic
 	if float(get(q1))<=float(get(q2)):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 def greaterEqual(q1,q2,q3):
 	global temp_dic
 	if float(get(q1))>=float(get(q2)):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 
 def equal(q1,q2,q3):
 	global temp_dic
@@ -123,22 +148,50 @@ def equal(q1,q2,q3):
 		temp_dic[q3]=True
 	else: 
 		temp_dic[q3]=False
-	print temp_dic
+	#print temp_dic
 def era(q1,q2,q3):
-	#todo: guardar los datos de la funcion actual y cargar la nueva
+	global stack
+	global local_dic
+	stack.append([count,deepcopy(local_dic)])
+	local_dic={}
+	fill_local_dic(q2)
+	global params
+	params=data['funcs'][q2]
 
 def ver(q1,q2,q3):
-	if not (get(q1)>=q2 and get(q1)<=q3):
-		print errors['ARR_OVERFLOW'] #todo: agregar errores de arr overflow
+	if not (int(get(q1))>=q2 and int(get(q1))<=q3):
+		print errors['ARR_OVERFLOW'] 
 		exit(-1)
+	global q
+	global count
+	count= count +1
+	quad= q[count]
+	global temp_dic
+	temp_dic[quad[3]]=int(get(quad[1]))+int(quad[2])
+
 def param(q1,q2,q3):
-	#todo: agregar parametros al stack 
+	x=list(reversed(params['params']))[q3-1]
+	local_dic[params['localVars'][x[0]]['memdir']]=get(q1)
+	pp.pprint(local_dic)
 
+	
 def gosub(q1,q2,q3):
-	#todo: poner los parametor del stack de params para definir en el nuevo memoria
-	count=q1
+	global count
+	last=stack.pop()
+	last[0]=count
+	stack.append(last)
+	count=q1-1
+	
+def ret(q1,q2,q3):
+	global global_dic
+	global_dic[q1]=get(q3)
 
-def 
+def retorno(q1,q2,q3):
+	global count
+	fun=stack.pop()
+	count=fun[0]
+	local_dic=fun[1]
+	
 methods = {
 	'+': suma,
 	'-': resta,
@@ -154,6 +207,8 @@ methods = {
 	'era': era,
 	'ver': ver,
 	'param': param,
+	'return': ret,
+	'retorno' :retorno,
 	'gosub': gosub, #todo: implementar cambiar local_dict 
 	'gotof': gotof,
 	'goto': goto,
@@ -177,12 +232,12 @@ fill_local_dic('main')
 count = 0
 while count<len(q):
 	quad= q[count]
-	print count
-	print quad
+	#print count
+	#print quad
 	methods[quad[0]](quad[1],quad[2],quad[3]) 
 	count= count +1
 
-
+print 'TERMINOOOOOOOOO------'
 
 pp.pprint(local_dic)
 pp.pprint(temp_dic)
