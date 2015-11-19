@@ -152,7 +152,7 @@ def equal(q1,q2,q3):
 def era(q1,q2,q3):
 	global stack
 	global local_dic
-	stack.append([count,deepcopy(local_dic)])
+	stack.append([count,deepcopy(local_dic),deepcopy(temp_dic)])
 	#local_dic={}
 	#fill_local_dic(q2)
 	global params
@@ -191,10 +191,12 @@ def ret(q1,q2,q3):
 
 def retorno(q1,q2,q3):
 	global local_dic
+	global temp_dic
 	global count
 	fun=stack.pop()
 	count=fun[0]
 	local_dic=fun[1]
+	temp_dic=fun[2]
 	
 methods = {
 	'+': suma,
@@ -236,8 +238,8 @@ fill_local_dic('main')
 count = 0
 while count<len(q):
 	quad= q[count]
-	print count
-	print quad
+	#print count
+	#print quad
 	methods[quad[0]](quad[1],quad[2],quad[3]) 
 	count= count +1
 
