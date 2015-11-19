@@ -1,0 +1,17 @@
+
+function int funcion(int var1){
+	if(var1==0){
+		return 1;	
+	}else{
+		print(0);
+	}
+}
+
+main() {
+	int luis;
+	luis = 0;
+	while(luis<10){
+		funcion(luis);
+		luis = luis+1;
+	}
+}

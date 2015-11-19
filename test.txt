@@ -1,24 +1,31 @@
 int global, global2;
 float aza,aza2;
 int ga,gb,gc;
-function void funcion1(arrfloat[15] var5, int var6){
+function void funcion1(int var1, float var2){
 
 	float faza;
+	faza=1+1;
+	arrfloat[5] z;
+	int alex;
+	alex=1;
+	z[1]=1;
+	alex = z[1]+var1;
+
+}
+function int funcion(int var1, float var2, int var3,int var4){
+	int papa,luis;
+	return 1;
 }
 
-function int funcion(int var1, float var2, arrint[10] var3, arrfloat[15] var4){
-	line(1,2,3,4);
-}
+
+
+
 
 main() {
 	int luis;
-	luis = 5*4	;
-	luis = 5*funcion()	;
-	while(1>2){
-		luis=2+3;
-	}
-	luis=1;
-	print("ddd");
-	int a,b,c;
-	arrint[5] z;
+	luis = 5*4;
+	funcion(1+5,2.2,1,1);
+	luis = 5*funcion(1+5,2.2,1,1);
+	funcion1(1,2.1);
+	
 }
