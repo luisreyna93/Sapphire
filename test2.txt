@@ -9,6 +9,11 @@ function int funcion(int var1){
 main() {
 	int luis;
 	luis = 1;
+	if(luis==1){
+		print("uno");
+	}else{
+		print("dos");
+	}
 	while(luis<10){
 		print(funcion(luis));
 		luis = luis+1;

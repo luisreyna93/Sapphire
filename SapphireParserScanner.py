@@ -239,16 +239,13 @@ def p_firstmain(p):
 def p_block(p): 
     '''block : '{' body '}' ''' 
     global statusCondicion
+    global quadruploStack
     if statusCondicion>0:
         if whileCondicion>0:
             falso= quadruploStack.pop()
             retorno=quadruploStack.pop()
             quadruplo.append(['goto','-1','-1',retorno])
             quadruplo[falso] = [quadruplo[falso][0],quadruplo[falso][1][0],'-1',len(quadruplo)]
-        else:
-            global quadruploStack
-            salida= quadruploStack.pop()
-            quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)]
         
         statusCondicion=-1
 
@@ -298,7 +295,7 @@ def p_firstfuncquad(p):
         global paramsTemp
         global tipoActualReturn
         global actualFunc
-        global funcquad
+        #global funcquad
         if func_is_repeated(p[-4]):
             print errors['REPEATED_DECLARATION_FUNC']
             exit(1)
@@ -316,7 +313,7 @@ def p_firstfuncquad2(p):
     if not ret and tipo!='void':
         print errors['RETURN_TYPE_FUNC_MISSMATCH']
         exit(-1)
-        
+
     if (ret[1]!=tipo) and tipo!='void':
         print errors['RETURN_TYPE_FUNC_MISSMATCH']
         exit(-1)
@@ -423,9 +420,17 @@ def p_condaux(p):
 def p_condp(p): 
     '''condp : ELSE condpaux block 
              | empty'''
+    global quadruplo
+    global quadruploStack
+    salida= quadruploStack.pop()
+    quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)]
 
 def p_condpaux(p): 
     '''condpaux : '''
+    global quadruploStack
+    global quadruplo
+    salida= quadruploStack.pop()
+    quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)+1]
     quadruploStack.append(len(quadruplo))
     quadruplo.append(['goto',['-1','-1'],'-1','-1'])
     global statusCondicion
