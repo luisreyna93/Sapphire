@@ -52,6 +52,8 @@ def add_to_func(fid, ftype, fparams,fquad):
         'quad' : fquad
     }
     print_func_dict()
+
+def delete_local_var_dict():
     local_var_dict={}
 
 def add_to_local_var_dict(mem,var_id, type,cant):
@@ -61,7 +63,7 @@ def add_to_local_var_dict(mem,var_id, type,cant):
         'memdir' : num,
         'size': cant
     }
-    print_local_var_dict()
+    #print_local_var_dict()
     #memoryCont= memoryCont +1
 
 def add_to_global_var_dict(mem,var_id, type,cant):
@@ -87,6 +89,7 @@ def get_var(id):
         return [global_vars_dic[id]['memdir'],global_vars_dic[id]['type']]
     else :
         print errors['NOT_DECLARED_VAR']
+        pp.pprint(local_var_dict)
         exit(-1)
 def func_is_repeated(fid):
     if fid in func_dic:
@@ -132,7 +135,6 @@ def validate_arr(vid):
             error=True
         else:
             return [global_vars_dic[vid]['memdir'],(global_vars_dic[vid]['type']).replace('arr',''),global_vars_dic[vid]['size']]
-    
     print errors['NOT_DECLARED_VAR']
     exit(-1)
 

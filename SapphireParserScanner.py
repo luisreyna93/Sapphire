@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 import sys
 import Lex
-from SapphireSemantics import validate_arr,func_dic,global_vars_dic, get_var,errors, add_to_func, func_is_repeated,get_func_quad, print_func_dict,validate_func_params,get_func_return_type, get_func_vars,add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
+from SapphireSemantics import validate_arr,func_dic,delete_local_var_dict,global_vars_dic, get_var,errors, add_to_func, func_is_repeated,get_func_quad, print_func_dict,validate_func_params,get_func_return_type, get_func_vars,add_to_local_var_dict,print_local_var_dict,add_to_global_var_dict,global_var_exists,local_var_exists
 from SapphireQuadruples import semantic_cube
 from copy import deepcopy
 from MapaMemoria import MapaMemoria
@@ -201,6 +201,7 @@ def p_returntype(p):
     '''returntype : VOID
                   | INT
                   | FLOAT''' 
+    print p[1]
     global tipoActualReturn 
     tipoActualReturn.append(p[1])
 
@@ -220,7 +221,6 @@ def p_arrp(p):
 def p_main(p): 
     '''main : MAIN firstmain '(' ')' firstfuncquad block ''' 
     global paramsTemp
-    global tipoActualReturn
     global actualFunc
     if func_is_repeated(p[3]):
         print errors['REPEATED_DECLARATION_FUNC']
@@ -278,45 +278,54 @@ def p_ret(p):
     '''ret : RETURN sexp ';' '''
     global ret
     ret=pilao.pop()
+    tipo=get_func_return_type(actualFunc)
+    if ret and (tipo != 'void') and (ret[1]==tipo):
+        quadruplo.append(['return',actualFunc,'-1',ret[0]])
+        quadruplo.append(['retorno','-1','-1','-1'])
+    elif tipo != 'void' or ret:
+        print errors['RETURN_TYPE_FUNC_MISSMATCH']
+        exit(-1)
 
 def p_functions(p): 
     '''functions : FUNCTION returntype ID '(' functionsp ')' firstfuncquad block firstfuncquad2
             | empty''' 
-    global paramsTemp
-    global tipoActualReturn
-    global actualFunc
-    global funcquad
-    if func_is_repeated(p[3]):
-        print errors['REPEATED_DECLARATION_FUNC']
-        exit(1)
-    else:
-        global ret
-        actualFunc=p[3]
-        tipo=tipoActualReturn.pop()
-        if ret and (tipo != 'void') and (ret[1]==tipo):
-            quadruplo.append(['return',actualFunc,'-1',ret[0]])
-        elif tipo != 'void' or ret:
-            print errors['RETURN_TYPE_FUNC_MISSMATCH']
-            exit(1)
-        ret= None
-        add_to_func(p[3], tipo, paramsTemp,funcquad)
-        paramsTemp = []
-        quadruplo.append(['retorno','-1','-1','-1'])
-        #print_func_dict()
 
 def p_firstfuncquad(p):
     '''firstfuncquad : '''
     global funcquad
     funcquad= len(quadruplo)
+    if firstMain!= 1:
+        global paramsTemp
+        global tipoActualReturn
+        global actualFunc
+        global funcquad
+        if func_is_repeated(p[-4]):
+            print errors['REPEATED_DECLARATION_FUNC']
+            exit(1)
+        else:
+            actualFunc=p[-4]
+            tipo=tipoActualReturn.pop()
+            add_to_func(p[-4], tipo, paramsTemp,funcquad)
+            paramsTemp = []
+            #print_func_dict()
 
 
 def p_firstfuncquad2(p):
     '''firstfuncquad2 : '''
+    tipo=get_func_return_type(actualFunc)
+    if not ret and tipo!='void':
+        print errors['RETURN_TYPE_FUNC_MISSMATCH']
+        exit(-1)
+        
+    if (ret[1]!=tipo) and tipo!='void':
+        print errors['RETURN_TYPE_FUNC_MISSMATCH']
+        exit(-1)
     global mem_local
     mem_local= MapaMemoria(0, 1000, 2000, 3000,4000)# borrar mem_local para empezar 
     global mem_temps
     mem_temps=MapaMemoria(12000,13000,14000,15000,16000)# borrar mem_local
-    
+    delete_local_var_dict()
+
 def p_functionsp(p): 
     '''functionsp : param
                   | empty''' 

@@ -6,6 +6,7 @@ from copy import deepcopy
 pp = pprint.PrettyPrinter()
 global_dic={}
 local_dic={}
+local_dic_aux={}
 temp_dic={}
 const_dic={}
 arr_dic={} #dictionary para saber el limite del arreglo
@@ -30,8 +31,6 @@ def get(q1):
 			return global_dic[q1]
 	except:
 		print "Variable sin valor"
-		print q1
-		print isinstance(q1, list)
 		pp.pprint(local_dic)
 		pp.pprint(temp_dic)
 		pp.pprint(const_dic)
@@ -81,6 +80,7 @@ def asig(q1,q2,q3):
 		temp_dic[q3]=get(q1)
 
 def prints(q1,q2,q3):
+	print 'print---------'
 	print get(q3)
 
 def goto(q1,q2,q3):
@@ -153,8 +153,8 @@ def era(q1,q2,q3):
 	global stack
 	global local_dic
 	stack.append([count,deepcopy(local_dic)])
-	local_dic={}
-	fill_local_dic(q2)
+	#local_dic={}
+	#fill_local_dic(q2)
 	global params
 	params=data['funcs'][q2]
 
@@ -170,9 +170,9 @@ def ver(q1,q2,q3):
 	temp_dic[quad[3]]=int(get(quad[1]))+int(quad[2])
 
 def param(q1,q2,q3):
+	global local_dic_aux
 	x=list(reversed(params['params']))[q3-1]
-	local_dic[params['localVars'][x[0]]['memdir']]=get(q1)
-	pp.pprint(local_dic)
+	local_dic_aux[params['localVars'][x[0]]['memdir']]=get(q1)
 
 	
 def gosub(q1,q2,q3):
@@ -181,12 +181,16 @@ def gosub(q1,q2,q3):
 	last[0]=count
 	stack.append(last)
 	count=q1-1
+	global local_dic
+	global local_dic_aux
+	local_dic=local_dic_aux
 	
 def ret(q1,q2,q3):
 	global global_dic
 	global_dic[q1]=get(q3)
 
 def retorno(q1,q2,q3):
+	global local_dic
 	global count
 	fun=stack.pop()
 	count=fun[0]
@@ -232,8 +236,8 @@ fill_local_dic('main')
 count = 0
 while count<len(q):
 	quad= q[count]
-	#print count
-	#print quad
+	print count
+	print quad
 	methods[quad[0]](quad[1],quad[2],quad[3]) 
 	count= count +1
 
