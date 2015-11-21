@@ -3,6 +3,12 @@ import json
 import pprint
 from SapphireSemantics import errors
 from copy import deepcopy
+import sys
+import OpenGL
+from math import *
+from OpenGL.GL import *     
+from OpenGL.GLU import *    
+from OpenGL.GLUT import *
 pp = pprint.PrettyPrinter()
 global_dic={}
 local_dic={}
@@ -12,6 +18,7 @@ const_dic={}
 arr_dic={} #dictionary para saber el limite del arreglo
 stack=[] #Stack para guardar las memorias 
 params=[] #parametros de cada funcion
+linewidth=10 #variable para draw_line
 def get(q1):
 	try:
 		if isinstance(q1, list):
@@ -197,7 +204,93 @@ def retorno(q1,q2,q3):
 	count=fun[0]
 	local_dic=fun[1]
 	temp_dic=fun[2]
-	
+
+def draw_line(q1,q2,q3):
+	var1=get(q1[0])
+	var2=get(q1[1])
+	var3=get(q1[2])
+	var4=get(q1[3])
+	print 'asas'
+	print linewidth
+	glLineWidth(200);
+	glBegin(GL_LINES); 
+	glVertex2f(float(var1), float(var2));
+	glVertex2f(float(var3), float(var4));
+	glEnd();
+def rect(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	var4=float(get(q1[3]))
+	glBegin(GL_QUADS)                                  # start drawing a rectangle
+	glVertex2f(var1, var2)                                   # bottom left point
+	glVertex2f(var1, var3)                           # bottom right point
+	glVertex2f(var3, var4)                  # top right point
+	glVertex2f(var3, var2)                          # top left point
+	glEnd()
+def teapot(q1,q2,q3):
+    glutWireTeapot(0.5)
+
+def triangle(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	var4=float(get(q1[3]))
+	glBegin(GL_TRIANGLES)                                  # start drawing a rectangle
+	glVertex2f(var1, var2)                           # bottom right point
+	glVertex2f(var1+var3, var2)                  # top right point
+	glVertex2f(var1+(var3/2), var2+var4)                          # top left point
+	glEnd()
+def cube(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	var4=float(get(q1[3]))
+	glutWireCube (1.0);
+def color(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	glColor3f(var1, var2, var3)
+
+def circle(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	posx, posy = var1,var2    
+	sides = 32    
+	radius = var3    
+	glBegin(GL_POLYGON)    
+	for i in range(100):    
+	    cosine= radius * cos(i*2*pi/sides) + posx    
+	    sine  = radius * sin(i*2*pi/sides) + posy    
+	    glVertex2f(cosine,sine)
+	glEnd()
+
+
+def arc(q1,q2,q3):
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	var4=float(get(q1[3]))
+	PI = 3.14
+	step=5.0;
+	glBegin(GL_LINE_STRIP)
+	angle=var3
+	while angle<=var4:
+		rad  = PI*angle/180
+		x  = var1+100*cos(rad)
+		y  = var2+100*sin(rad)
+		glVertex(x,y,0.0)
+		angle+=step
+	glEnd()
+def widthLine(q1,q2,q3):
+	var1=float(get(q1))
+	print var1
+	global linewidth
+	linewidth=var1
+
+
 methods = {
 	'+': suma,
 	'-': resta,
@@ -218,17 +311,35 @@ methods = {
 	'gosub': gosub, #todo: implementar cambiar local_dict 
 	'gotof': gotof,
 	'goto': goto,
-	'line': suma,
-	'rect': resta,
-	'teapot': suma,
-	'triangle': resta,
-	'cube': suma,
-	'color': resta,
-	'arc': suma,
-	'circle': resta,
-	'width': suma,
+	'line': draw_line,
+	'rect': rect,
+	'teapot': teapot,
+	'triangle': triangle,
+	'cube': cube,
+	'color': color,
+	'arc': arc,
+	'circle': circle,
+	'width': widthLine,
 	'print': prints,}
+window = 0                                             # glut window number
+width, height = 500, 400   
+def refresh2d(width, height):
+    glViewport(0, 0, width, height)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(0.0, width, 0.0, height, 0.0, 1.0)
+    glMatrixMode (GL_MODELVIEW)
+    glLoadIdentity()
 
+glutInit(sys.argv)
+glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
+glutInitWindowSize(500, 400)
+glutInitWindowPosition(100, 100)
+glutCreateWindow("Python OGL Program")
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # clear the screen
+glLoadIdentity()                                   # reset position
+refresh2d(width, height)                           # set mode to 2d
+glColor3f(1.0, 1.0, 1.0)
 with open('obj.json') as df:
 	data=json.load(df)
 const_dic=data['constants']
@@ -245,6 +356,15 @@ while count<len(q):
 
 print 'TERMINOOOOOOOOO------'
 
+def draw():                           # set color to white
+	glutSwapBuffers() 
+glutDisplayFunc(draw)
+glutIdleFunc(draw)
+glutMainLoop()
+
+
+
+draw()
 pp.pprint(local_dic)
 pp.pprint(temp_dic)
 exit(-1)
