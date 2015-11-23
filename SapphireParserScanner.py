@@ -313,10 +313,14 @@ def p_firstfuncquad2(p):
     if not ret and tipo!='void':
         print errors['RETURN_TYPE_FUNC_MISSMATCH']
         exit(-1)
+    if not ret and tipo=='void':
+        quadruplo.append(['retorno','-1','-1','-1'])
+    if ret:
+        if (ret[1]!=tipo) and tipo!='void':
+            print errors['RETURN_TYPE_FUNC_MISSMATCH']
+            exit(-1)
 
-    if (ret[1]!=tipo) and tipo!='void':
-        print errors['RETURN_TYPE_FUNC_MISSMATCH']
-        exit(-1)
+
     global mem_local
     mem_local= MapaMemoria(0, 1000, 2000, 3000,4000)# borrar mem_local para empezar 
     global mem_temps
@@ -423,6 +427,11 @@ def p_condp(p):
     global quadruplo
     global quadruploStack
     salida= quadruploStack.pop()
+    pp.pprint(quadruplo)
+    pp.pprint(quadruploStack)
+    print salida
+    print quadruplo[salida]
+    print len(quadruplo)
     quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)]
 
 def p_condpaux(p): 

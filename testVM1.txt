@@ -1,0 +1,24 @@
+main() {
+	int luis;
+	luis=5+1;
+	arrint[2] arl;
+	arl[0]=3000000000000000;
+	arl[1]=222222;
+	luis= arl[1]+1;
+	luis=6;
+	if(luis>5){
+		print("entro");
+	}else{
+		print("no entro");
+		print("asa");
+	}
+	while(luis>0){
+		print(luis);
+		luis=luis-1;
+	}
+	for(arl[1]=3; arl[1]>0){
+		print(arl[1]);
+		arl[1]=arl[1]-1;
+	}
+
+}

@@ -1,0 +1,37 @@
+main() {
+	arrint[10] arr;
+	int x;
+	x=0;
+	while(x<10){
+		arr[x]=x+1;
+		x=x+1;
+	}
+	arr[4]=11;
+	x=0;
+	while(x<10){
+		print(arr[x]);
+		x=x+1;
+	}
+	int j;
+	j=0;
+	int tmp;
+	int swapped;
+	swapped=1;
+	while(swapped <> 0){
+		swapped=0;
+		j=j+1;
+		int i;
+		i=0;
+		while(i<10-j){
+			if(arr[i]>arr[i+1]){
+				tmp=arr[i];
+				arr[i]=arr[i+1];
+				arr[i+1]=tmp;
+				swapped=1;
+			}
+			i=i+1;
+		}
+
+	}
+
+}

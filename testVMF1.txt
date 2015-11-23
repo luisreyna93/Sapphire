@@ -1,0 +1,12 @@
+function void fun(int n){
+	while(n>1){
+
+		color(222.0,0.0,0.0);
+		circle(1500.0/n,800.0/n,100.0/n);
+		n=n-1;
+	}
+}
+
+main() {
+	fun(15);
+}
