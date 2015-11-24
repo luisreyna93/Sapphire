@@ -21,6 +21,7 @@ popper= []
 quadruplo=[]
 actualFunc=""
 quadruploStack=[] #saltos para los quadruplos
+quadruploStackif=[] #saltos para los quadruplos
 statusCondicion= -1
 whileCondicion=-1
 printType=-1
@@ -240,14 +241,7 @@ def p_block(p):
     '''block : '{' body '}' ''' 
     global statusCondicion
     global quadruploStack
-    if statusCondicion>0:
-        if whileCondicion>0:
-            falso= quadruploStack.pop()
-            retorno=quadruploStack.pop()
-            quadruplo.append(['goto','-1','-1',retorno])
-            quadruplo[falso] = [quadruplo[falso][0],quadruplo[falso][1][0],'-1',len(quadruplo)]
-        
-        statusCondicion=-1
+    
 
 def p_body(p): 
     '''body : vars statmp''' 
@@ -418,29 +412,24 @@ def p_condaux(p):
         print errors['TYPE_MISMATCH']
         exit(1)
     else:
-        global quadruploStack
-        quadruploStack.append(len(quadruplo))
+        global quadruploStackif
+        quadruploStackif.append(len(quadruplo))
         quadruplo.append(['gotof',cond,'-1','-1'])
 def p_condp(p): 
     '''condp : ELSE condpaux block 
              | empty'''
     global quadruplo
-    global quadruploStack
-    salida= quadruploStack.pop()
-    pp.pprint(quadruplo)
-    pp.pprint(quadruploStack)
-    print salida
-    print quadruplo[salida]
-    print len(quadruplo)
+    global quadruploStackif
+    salida= quadruploStackif.pop()
     quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)]
 
 def p_condpaux(p): 
     '''condpaux : '''
-    global quadruploStack
+    global quadruploStackif
     global quadruplo
-    salida= quadruploStack.pop()
+    salida= quadruploStackif.pop()
     quadruplo[salida] = [quadruplo[salida][0],quadruplo[salida][1][0],'-1',len(quadruplo)+1]
-    quadruploStack.append(len(quadruplo))
+    quadruploStackif.append(len(quadruplo))
     quadruplo.append(['goto',['-1','-1'],'-1','-1'])
     global statusCondicion
     statusCondicion=1
@@ -515,6 +504,10 @@ def p_foraux(p):
     #     exit(1)
 def p_while(p): 
     '''while : WHILE whileaux '(' sexp ')' whileaux2 block'''
+    falso= quadruploStack.pop()
+    retorno=quadruploStack.pop()
+    quadruplo.append(['goto','-1','-1',retorno])
+    quadruplo[falso] = [quadruplo[falso][0],quadruplo[falso][1][0],'-1',len(quadruplo)]
 
 def p_whileaux2(p): 
     '''whileaux2 : '''

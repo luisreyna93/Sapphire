@@ -10,10 +10,23 @@ function int factorial(int n){
 	return x;
 }
 
+function int factorial2(int n){
+	int res;
+	res = 1;
+	while(n > 0){
+		res = res * n;
+		n = n - 1;
+	}
+	return res;
+}
+
 main() {
 	float a;
 	int b;
+	int c;
 	a = 2 * 2 * 2 + 10.5;
 	b = factorial(5);
 	print(b);
+	c = factorial2(5);
+	print(c);
 }

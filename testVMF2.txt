@@ -33,5 +33,10 @@ main() {
 		}
 
 	}
+	x=0;
+	while(x<10){
+		print(arr[x]);
+		x=x+1;
+	}
 
 }
