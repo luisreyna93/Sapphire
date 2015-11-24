@@ -87,7 +87,6 @@ def asig(q1,q2,q3):
 		temp_dic[q3]=get(q1)
 
 def prints(q1,q2,q3):
-	print 'print---------'
 	print get(q3)
 
 def goto(q1,q2,q3):
@@ -229,7 +228,17 @@ def rect(q1,q2,q3):
 	glVertex2f(var3, var2)                          # top left point
 	glEnd()
 def teapot(q1,q2,q3):
-    glutWireTeapot(0.5)
+	var1=float(get(q1[0]))
+	var2=float(get(q1[1]))
+	var3=float(get(q1[2]))
+	var4=float(get(q1[3]))
+	glPushMatrix()
+	glTranslated(var1, var2, var3)
+	glRotated(rota, 0.0, 1.0, 0.0)
+	glColor3f(var1, var2, var3)
+	glutWireTeapot(var4)
+	glPopMatrix()
+	glutSwapBuffers()
 
 def triangle(q1,q2,q3):
 	var1=float(get(q1[0]))
@@ -246,7 +255,14 @@ def cube(q1,q2,q3):
 	var2=float(get(q1[1]))
 	var3=float(get(q1[2]))
 	var4=float(get(q1[3]))
-	glutWireCube (1.0);
+	glPushMatrix()
+	glTranslated(var1, var2, var3)
+	glRotated(0, 0.0, 1.0, 0.0)
+	glColor3f(var1, var2, var3)
+	glutWireCube (var4);
+	glPopMatrix()
+	glutSwapBuffers()
+
 def color(q1,q2,q3):
 	var1=float(get(q1[0]))
 	var2=float(get(q1[1]))
@@ -327,7 +343,7 @@ def refresh2d(width, height):
     glViewport(0, 0, width, height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0.0, width, 0.0, height, 0.0, 1.0)
+    glOrtho(0.0, width, 0.0, height, 0.0, 500.0)
     glMatrixMode (GL_MODELVIEW)
     glLoadIdentity()
 
@@ -354,7 +370,7 @@ while count<len(q):
 	methods[quad[0]](quad[1],quad[2],quad[3]) 
 	count= count +1
 
-print 'TERMINOOOOOOOOO------'
+print 'Fin de la ejecucion, favor de cerrar la ventana grafica para continuar.'
 
 def draw():                           # set color to white
 	glutSwapBuffers() 

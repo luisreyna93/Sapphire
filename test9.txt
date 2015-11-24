@@ -1,0 +1,30 @@
+function float exists(float n, float y, float z){
+	if(z <> 1.0){
+		if(n == y){
+			print("Si existe el valor en el vector");
+			return 1.0;
+		} else {
+			return 0.0;
+		}
+	} else {
+		return 1.0;
+	}
+}
+
+main() {
+	int x;
+	float res2;
+	res2 = 3;
+	x = 0;
+	arrfloat[15] arl3;
+	while(x<15){
+		arl3[x]=x*3;
+		print(arl3[x]);
+		x=x+1;
+	}
+	x = 0;
+	while(x<15){
+		res2 = exists(arl3[x], 3.0, res2);
+		x = x + 1;
+	}
+}

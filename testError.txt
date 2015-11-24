@@ -1,0 +1,16 @@
+main() {
+	int x;
+	x=0;
+	while(x<3){
+		int i;
+		i=0;
+		if(x<=i){
+			print("entro");
+		}
+		else{
+			print("no entro");
+		}
+		x=x+1;
+	}
+
+}

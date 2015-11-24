@@ -1,0 +1,23 @@
+main() {
+	int luis;
+	int res;
+	luis=2;
+	res = 0;
+	arrint[3] arl;
+	arrint[3] arl2;
+	arl[0]=10;
+	arl[1]=20;
+	arl[2]=30;
+	arl2[0]=30;
+	arl2[1]=20;
+	arl2[2]=10;
+	print(arl[0]*arl[1]);
+	while(luis >= 0){
+		print(luis);
+		res = res + (arl[luis]*arl2[luis]);
+		luis = luis - 1;
+	}
+	print(res);
+	print(res*res);
+	print(res*arl[1]);
+}
